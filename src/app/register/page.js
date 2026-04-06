@@ -1,17 +1,8 @@
 'use client';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
+import { upazilas } from '@/lib/upazilaData';
 
-const DESIGNATIONS = [
-    'UHFPO',
-    'RMO',
-    'Medical Officer',
-    'Health Manager',
-    'Field-level Supervisor',
-    'Other',
-];
-
-const AREAS_OF_WORK = ['Facility', 'Field', 'District', 'Upazila'];
 const GENDERS = ['Male', 'Female', 'Other'];
 
 export default function RegisterPage() {
@@ -20,18 +11,24 @@ export default function RegisterPage() {
     const [form, setForm] = useState({
         phone: '',
         fullName: '',
-        designation: '',
-        designationOther: '',
+        educationalQualification: '',
         age: '',
         gender: '',
-        areaOfWork: '',
-        organization: '',
-        email: '',
-        yearsExperience: '',
+        experienceYears: '',
+        experienceMonths: '',
+        upazila: '',
     });
 
+    // Searchable Upazila state
+    const [searchTerm, setSearchTerm] = useState('');
+    const [showUpazilaList, setShowUpazilaList] = useState(false);
+    const upazilaRef = useRef(null);
+
+    const filteredUpazilas = upazilas.filter(u => 
+        u.toLowerCase().includes(searchTerm.toLowerCase())
+    ).sort();
+
     useEffect(() => {
-        // Pre-fill phone from localStorage if saved from landing page
         const savedPhone = localStorage.getItem('participantPhone');
         const savedName = localStorage.getItem('whitelistedName');
 
@@ -41,32 +38,43 @@ export default function RegisterPage() {
                 phone: savedPhone || '',
                 fullName: savedName || ''
             }));
-            
-            // Clean up the whitelisted name so it doesn't persist across different user attempts
             if (savedName) localStorage.removeItem('whitelistedName');
         }
+
+        // Close dropdown on click outside
+        const handleClickOutside = (event) => {
+            if (upazilaRef.current && !upazilaRef.current.contains(event.target)) {
+                setShowUpazilaList(false);
+            }
+        };
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => document.removeEventListener('mousedown', handleClickOutside);
     }, []);
 
     const updateField = (field, value) => {
         setForm((prev) => ({ ...prev, [field]: value }));
     };
 
+    const handleUpazilaSelect = (name) => {
+        updateField('upazila', name);
+        setSearchTerm(name);
+        setShowUpazilaList(false);
+    };
+
     const handleSubmit = async (e) => {
         e.preventDefault();
-        if (!form.phone || !form.fullName) return;
+        if (!form.phone || !form.fullName || !form.upazila) {
+            alert('Please fill in all required fields, including Upazila.');
+            return;
+        }
         setLoading(true);
 
         try {
             const payload = {
-                phone: form.phone.trim(),
-                fullName: form.fullName.trim(),
-                designation: form.designation === 'Other' ? form.designationOther : form.designation,
+                ...form,
                 age: form.age ? parseInt(form.age) : undefined,
-                gender: form.gender,
-                areaOfWork: form.areaOfWork,
-                organization: form.organization.trim(),
-                email: form.email.trim(),
-                yearsExperience: form.yearsExperience ? parseInt(form.yearsExperience) : undefined,
+                experienceYears: form.experienceYears ? parseInt(form.experienceYears) : 0,
+                experienceMonths: form.experienceMonths ? parseInt(form.experienceMonths) : 0,
             };
 
             const res = await fetch('/api/participant/register', {
@@ -94,39 +102,31 @@ export default function RegisterPage() {
 
     return (
         <div style={{ minHeight: '100vh', background: 'var(--color-surface)' }}>
-            {/* Header */}
-            <div style={{
-                background: 'var(--color-primary-dark)',
-                color: '#fff',
-                padding: '1.25rem 1.5rem',
-                textAlign: 'center',
-            }}>
+            <div style={{ background: 'var(--color-primary-dark)', color: '#fff', padding: '1.25rem 1.5rem', textAlign: 'center' }}>
                 <p style={{ margin: 0, fontSize: '0.75rem', color: 'rgba(255,255,255,0.5)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>Step 1 of 2</p>
                 <h2 style={{ margin: '0.25rem 0 0', fontSize: '1.125rem', fontWeight: 600 }}>Participant Registration</h2>
             </div>
 
-            <div className="container-narrow" style={{ paddingTop: '1.5rem', paddingBottom: '6rem' }}>
+            <div className="container-narrow" style={{ paddingTop: '1.5rem', paddingBottom: '7rem' }}>
                 <form onSubmit={handleSubmit}>
-                    {/* Phone Number (crucial) */}
-                    <div className="card animate-slide-up" style={{ marginBottom: '1rem', borderLeft: '3px solid var(--color-accent)' }}>
-                        <div className="form-group" style={{ marginBottom: 0 }}>
-                            <label className="form-label form-label-required">Contact Number</label>
-                            <input
-                                type="tel"
-                                className="form-input"
-                                placeholder="e.g. 01XXXXXXXXX"
-                                value={form.phone}
-                                onChange={(e) => updateField('phone', e.target.value)}
-                                required
-                            />
-                            <p className="form-hint">This number will be used to save and resume your progress</p>
+                    <div className="card animate-slide-up" style={{ marginBottom: '1rem', borderLeft: '4px solid var(--color-accent)' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.5rem' }}>
+                            <span style={{ fontSize: '1.25rem' }}>📞</span>
+                            <label className="form-label form-label-required" style={{ marginBottom: 0 }}>Contact Number</label>
                         </div>
+                        <input
+                            type="tel"
+                            className="form-input"
+                            placeholder="e.g. 01XXXXXXXXX"
+                            value={form.phone}
+                            onChange={(e) => updateField('phone', e.target.value)}
+                            required
+                        />
+                        <p className="form-hint">Used only for saving your survey progress</p>
                     </div>
 
-                    {/* Personal Details */}
                     <div className="card animate-slide-up" style={{ marginBottom: '1rem', animationDelay: '0.05s' }}>
-                        <h4 style={{ margin: '0 0 1rem', fontSize: '0.813rem', fontWeight: 600, color: 'var(--color-text-secondary)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>Personal Information</h4>
-
+                        <h4 style={{ margin: '0 0 1rem', fontSize: '0.813rem', fontWeight: 600, color: 'var(--color-text-secondary)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>Personal Profile</h4>
                         <div className="form-group">
                             <label className="form-label form-label-required">Full Name</label>
                             <input
@@ -138,124 +138,127 @@ export default function RegisterPage() {
                                 required
                             />
                         </div>
-
                         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
                             <div className="form-group" style={{ marginBottom: 0 }}>
                                 <label className="form-label">Age</label>
-                                <input
-                                    type="number"
-                                    className="form-input"
-                                    placeholder="Age"
-                                    min="18"
-                                    max="100"
-                                    value={form.age}
-                                    onChange={(e) => updateField('age', e.target.value)}
-                                />
+                                <input type="number" className="form-input" placeholder="Age" min="18" max="100" value={form.age} onChange={(e) => updateField('age', e.target.value)} />
                             </div>
                             <div className="form-group" style={{ marginBottom: 0 }}>
                                 <label className="form-label">Gender</label>
                                 <select className="form-select" value={form.gender} onChange={(e) => updateField('gender', e.target.value)}>
                                     <option value="">Select</option>
-                                    {GENDERS.map((g) => (
-                                        <option key={g} value={g}>{g}</option>
-                                    ))}
+                                    {GENDERS.map((g) => <option key={g} value={g}>{g}</option>)}
                                 </select>
                             </div>
                         </div>
                     </div>
 
-                    {/* Professional Details */}
                     <div className="card animate-slide-up" style={{ marginBottom: '1rem', animationDelay: '0.1s' }}>
-                        <h4 style={{ margin: '0 0 1rem', fontSize: '0.813rem', fontWeight: 600, color: 'var(--color-text-secondary)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>Professional Information</h4>
-
+                        <h4 style={{ margin: '0 0 1rem', fontSize: '0.813rem', fontWeight: 600, color: 'var(--color-text-secondary)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>Professional & Academic Info</h4>
+                        
                         <div className="form-group">
-                            <label className="form-label">Designation</label>
-                            <select className="form-select" value={form.designation} onChange={(e) => updateField('designation', e.target.value)}>
-                                <option value="">Select designation</option>
-                                {DESIGNATIONS.map((d) => (
-                                    <option key={d} value={d}>{d}</option>
-                                ))}
-                            </select>
-                        </div>
-
-                        {form.designation === 'Other' && (
-                            <div className="form-group">
-                                <label className="form-label">Specify Designation</label>
-                                <input
-                                    type="text"
-                                    className="form-input"
-                                    placeholder="Enter your designation"
-                                    value={form.designationOther}
-                                    onChange={(e) => updateField('designationOther', e.target.value)}
-                                />
-                            </div>
-                        )}
-
-                        <div className="form-group">
-                            <label className="form-label">Area of Work</label>
-                            <select className="form-select" value={form.areaOfWork} onChange={(e) => updateField('areaOfWork', e.target.value)}>
-                                <option value="">Select area</option>
-                                {AREAS_OF_WORK.map((a) => (
-                                    <option key={a} value={a}>{a}</option>
-                                ))}
-                            </select>
-                        </div>
-
-                        <div className="form-group">
-                            <label className="form-label">Organization Name</label>
+                            <label className="form-label form-label-required">Educational Qualification</label>
                             <input
                                 type="text"
                                 className="form-input"
-                                placeholder="Enter organization name"
-                                value={form.organization}
-                                onChange={(e) => updateField('organization', e.target.value)}
+                                placeholder="Highest level (e.g. MBBS, MPH, PhD)"
+                                value={form.educationalQualification}
+                                onChange={(e) => updateField('educationalQualification', e.target.value)}
+                                required
                             />
                         </div>
 
-                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
-                            <div className="form-group" style={{ marginBottom: 0 }}>
-                                <label className="form-label">Email</label>
-                                <input
-                                    type="email"
-                                    className="form-input"
-                                    placeholder="Email address"
-                                    value={form.email}
-                                    onChange={(e) => updateField('email', e.target.value)}
-                                />
+                        <div className="form-group">
+                            <label className="form-label form-label-required">Experience as USHFPO (Tenure)</label>
+                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
+                                <div style={{ position: 'relative' }}>
+                                    <input
+                                        type="number"
+                                        className="form-input"
+                                        placeholder="Years"
+                                        min="0"
+                                        value={form.experienceYears}
+                                        onChange={(e) => updateField('experienceYears', e.target.value)}
+                                        required
+                                    />
+                                    <span style={{ position: 'absolute', right: '0.75rem', top: '50%', transform: 'translateY(-50%)', fontSize: '0.75rem', color: 'var(--color-text-muted)' }}>Years</span>
+                                </div>
+                                <div style={{ position: 'relative' }}>
+                                    <input
+                                        type="number"
+                                        className="form-input"
+                                        placeholder="Months"
+                                        min="0"
+                                        max="11"
+                                        value={form.experienceMonths}
+                                        onChange={(e) => updateField('experienceMonths', e.target.value)}
+                                        required
+                                    />
+                                    <span style={{ position: 'absolute', right: '0.75rem', top: '50%', transform: 'translateY(-50%)', fontSize: '0.75rem', color: 'var(--color-text-muted)' }}>Months</span>
+                                </div>
                             </div>
-                            <div className="form-group" style={{ marginBottom: 0 }}>
-                                <label className="form-label">Years of Experience</label>
-                                <input
-                                    type="number"
-                                    className="form-input"
-                                    placeholder="Years"
-                                    min="0"
-                                    value={form.yearsExperience}
-                                    onChange={(e) => updateField('yearsExperience', e.target.value)}
-                                />
-                            </div>
+                        </div>
+
+                        <div className="form-group" style={{ marginBottom: 0, position: 'relative' }} ref={upazilaRef}>
+                            <label className="form-label form-label-required">Working Upazila</label>
+                            <input
+                                type="text"
+                                className="form-input"
+                                placeholder="Start typing Upazila name..."
+                                value={searchTerm}
+                                onChange={(e) => {
+                                    setSearchTerm(e.target.value);
+                                    setShowUpazilaList(true);
+                                    if (!e.target.value) updateField('upazila', '');
+                                }}
+                                onFocus={() => setShowUpazilaList(true)}
+                                required
+                            />
+                            {showUpazilaList && filteredUpazilas.length > 0 && (
+                                <div style={{
+                                    position: 'absolute',
+                                    top: '100%',
+                                    left: 0,
+                                    right: 0,
+                                    maxHeight: '200px',
+                                    overflowY: 'auto',
+                                    background: '#fff',
+                                    border: '1px solid var(--color-border)',
+                                    borderRadius: '0.5rem',
+                                    marginTop: '0.25rem',
+                                    zIndex: 100,
+                                    boxShadow: '0 4px 12px rgba(0,0,0,0.1)'
+                                }}>
+                                    {filteredUpazilas.map((name, index) => (
+                                        <div
+                                            key={`${name}-${index}`}
+                                            onClick={() => handleUpazilaSelect(name)}
+                                            style={{
+                                                padding: '0.75rem 1rem',
+                                                cursor: 'pointer',
+                                                fontSize: '0.875rem',
+                                                borderBottom: '1px solid var(--color-surface)',
+                                                transition: 'background 0.2s'
+                                            }}
+                                            onMouseEnter={(e) => e.target.style.background = 'var(--color-surface)'}
+                                            onMouseLeave={(e) => e.target.style.background = 'transparent'}
+                                        >
+                                            {name}
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
                         </div>
                     </div>
                 </form>
             </div>
 
-            {/* Sticky Bottom Button */}
-            <div style={{
-                position: 'fixed',
-                bottom: 0,
-                left: 0,
-                right: 0,
-                background: 'rgba(255,255,255,0.95)',
-                backdropFilter: 'blur(8px)',
-                borderTop: '1px solid var(--color-border)',
-                padding: '0.875rem 1rem',
-                zIndex: 50,
-            }}>
+            <div style={{ position: 'fixed', bottom: 0, left: 0, right: 0, background: 'rgba(255,255,255,0.95)', backdropFilter: 'blur(8px)', borderTop: '1px solid var(--color-border)', padding: '1rem', zIndex: 150 }}>
                 <div className="container-narrow">
                     <button
                         onClick={handleSubmit}
                         className="btn btn-primary btn-block btn-lg"
-                        disabled={loading || !form.phone || !form.fullName}
+                        disabled={loading || !form.phone || !form.fullName || !form.upazila}
                     >
                         {loading ? 'Creating Profile...' : 'Start Survey →'}
                     </button>

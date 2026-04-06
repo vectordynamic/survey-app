@@ -7,7 +7,16 @@ export async function POST(request) {
         await dbConnect();
         const body = await request.json();
 
-        const { phone, fullName, designation, age, gender, areaOfWork, organization, email, yearsExperience } = body;
+        const { 
+            phone, 
+            fullName, 
+            educationalQualification, 
+            age, 
+            gender, 
+            experienceYears, 
+            experienceMonths, 
+            upazila 
+        } = body;
 
         if (!phone) {
             return NextResponse.json({ error: 'Phone number is required' }, { status: 400 });
@@ -22,13 +31,12 @@ export async function POST(request) {
         const participant = await Participant.create({
             phone,
             fullName,
-            designation,
+            educationalQualification,
             age,
             gender,
-            areaOfWork,
-            organization,
-            email,
-            yearsExperience,
+            experienceYears: Number(experienceYears) || 0,
+            experienceMonths: Number(experienceMonths) || 0,
+            upazila,
             lastAnsweredQuestionIndex: 0,
             isComplete: false,
         });

@@ -10,6 +10,7 @@ export default function LandingPage() {
   const [loading, setLoading] = useState(false);
   const [thankYouPopup, setThankYouPopup] = useState(false);
   const [isCheckingSession, setIsCheckingSession] = useState(true);
+  const [hasReadConsent, setHasReadConsent] = useState(false);
 
   useEffect(() => {
     const checkExistingSession = async () => {
@@ -184,13 +185,13 @@ export default function LandingPage() {
           </h4>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
             {[
-              { label: 'Research Context & Background', icon: '📄' },
-              { label: 'Participant Information Sheet', icon: '📋' },
-              { label: 'Consent Form & Guidelines', icon: '📝' },
+              { label: 'DGHS Permission Letter', icon: '📄', file: 'Permission Letter from DG To UH&FPOS for support in PhD Research.pdf' },
+              { label: 'Ministry of Health & Family Welfare (GO)', icon: '🏛️', file: 'Ministry of Health & Family Welfare GO.pdf' },
+              { label: 'Ethical Clearance Certificate', icon: '📋', file: 'Certificate of Ethical Clearence_PhD Research_Dr Refat.pdf' },
             ].map((doc, i) => (
               <a
                 key={i}
-                href="#"
+                href={`/${doc.file}`}
                 target="_blank"
                 rel="noopener noreferrer"
                 style={{
@@ -227,28 +228,103 @@ export default function LandingPage() {
 
         {/* Consent Section */}
         {!showLogin && (
-          <div className="card animate-slide-up" style={{ animationDelay: '0.2s' }}>
-            <h4 style={{ margin: '0 0 0.75rem', fontSize: '0.875rem', fontWeight: 600, color: 'var(--color-text)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
-              Consent to Participate
+          <div className="card animate-slide-up" style={{ animationDelay: '0.2s', padding: '1.25rem' }}>
+            <h4 style={{ margin: '0 0 1rem', fontSize: '0.875rem', fontWeight: 600, color: 'var(--color-text)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+              Consent Statement & Study Details
             </h4>
-            <p style={{ fontSize: '0.875rem', color: 'var(--color-text-secondary)', lineHeight: 1.6, margin: '0 0 1rem' }}>
-              By agreeing, you consent to participate in this research study. Your responses will be used solely
-              for academic research purposes and will remain confidential.
+            
+            <div 
+              onScroll={(e) => {
+                const { scrollTop, scrollHeight, clientHeight } = e.currentTarget;
+                if (scrollHeight - scrollTop <= clientHeight + 50) {
+                  setHasReadConsent(true);
+                }
+              }}
+              style={{ 
+                height: 240, 
+                overflowY: 'scroll', 
+                background: 'var(--color-surface-alt)', 
+                padding: '1rem', 
+                borderRadius: '8px', 
+                fontSize: '0.813rem', 
+                color: 'var(--color-text-secondary)',
+                lineHeight: 1.6,
+                marginBottom: '1.25rem',
+                border: '1px solid var(--color-border)',
+                WebkitOverflowScrolling: 'touch'
+              }}
+            >
+              <h5 style={{ color: 'var(--color-text)', marginTop: 0 }}>Voluntary Participation</h5>
+              <p>Your participation in this survey is entirely voluntary. You may choose not to participate or may exit the survey at any time before submission without any penalty or consequences.</p>
+              
+              <h5 style={{ color: 'var(--color-text)' }}>Risks and Discomforts</h5>
+              <p>This study involves minimal risk. There are no expected physical or psychological risks. You may skip any question you do not wish to answer.</p>
+              
+              <h5 style={{ color: 'var(--color-text)' }}>Benefits of Participation</h5>
+              <p>Although there is no direct personal benefit, your participation will contribute to improving data-driven decision-making tools for primary healthcare management in Bangladesh. The findings may support better planning, resource allocation, and service delivery at the Upazila level.</p>
+              
+              <h5 style={{ color: 'var(--color-text)' }}>Confidentiality and Data Security</h5>
+              <ul style={{ paddingLeft: '1.2rem', marginBottom: '1rem' }}>
+                <li>Your responses will be collected anonymously through a secure online system.</li>
+                <li>No personally identifiable information will be published or disclosed.</li>
+                <li>Data will be stored securely and accessed only by the research team.</li>
+                <li>All data will be analyzed in aggregated form for research purposes only.</li>
+              </ul>
+              
+              <h5 style={{ color: 'var(--color-text)' }}>Right to Withdraw</h5>
+              <p>You have the right to stop participating at any point before submitting the survey. Once submitted, responses may not be withdrawn as they will be anonymized and integrated into the dataset.</p>
+              
+              <h5 style={{ color: 'var(--color-text)' }}>Contact Information</h5>
+              <p>
+                If you have any questions or concerns regarding this study, please contact:<br />
+                <strong>Dr. Md. Nazmul Hassan Refat</strong><br />
+                Mobile: 01711305535<br />
+                Email: nazmulhassanrefat@gmail.com
+              </p>
+
+              <div style={{ 
+                marginTop: '1rem', 
+                paddingTop: '1rem', 
+                borderTop: '1px solid var(--color-border)', 
+                textAlign: 'center',
+                color: 'var(--color-primary)',
+                fontWeight: 600
+              }}>
+                --- Verification Complete: Bottom Reached ---
+              </div>
+            </div>
+
+            <p style={{ 
+              fontSize: '0.75rem', 
+              color: hasReadConsent ? 'var(--color-primary)' : 'var(--color-text-muted)', 
+              marginBottom: '0.75rem',
+              fontWeight: 500,
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.5rem'
+            }}>
+              {hasReadConsent ? '✅ Information reviewed' : '⬇️ Please scroll through the information box to continue'}
             </p>
-            <div className="radio-group" style={{ marginBottom: '1rem' }}>
+
+            <div className="radio-group" style={{ 
+              marginBottom: '1.25rem', 
+              opacity: hasReadConsent ? 1 : 0.5, 
+              pointerEvents: hasReadConsent ? 'auto' : 'none',
+              transition: 'all 0.3s'
+            }}>
               <label
                 className={`radio-card ${consent === 'agree' ? 'active' : ''}`}
-                onClick={() => handleConsent('agree')}
+                onClick={() => hasReadConsent && handleConsent('agree')}
               >
                 <input type="radio" name="consent" checked={consent === 'agree'} readOnly />
-                I Agree
+                I Agree and wish to participate
               </label>
               <label
                 className={`radio-card ${consent === 'disagree' ? 'active' : ''}`}
-                onClick={() => handleConsent('disagree')}
+                onClick={() => hasReadConsent && handleConsent('disagree')}
               >
                 <input type="radio" name="consent" checked={consent === 'disagree'} readOnly />
-                I Disagree
+                I Do Not Agree
               </label>
             </div>
 
