@@ -296,15 +296,91 @@ body {
 }
 
 .star-btn:hover {
-  border-color: var(--color-warning);
-  color: var(--color-warning);
+  border-color: var(--color-primary);
+  color: var(--color-primary);
   transform: scale(1.08);
+  background: var(--color-surface-alt);
 }
 
 .star-btn.active {
-  background: var(--color-warning);
-  border-color: var(--color-warning);
+  background: #b07d2b;
+  border: 2px solid #1a1a1a;
   color: #fff;
+  box-shadow: 0 4px 12px rgba(176, 125, 43, 0.35);
+  font-weight: 700;
+}
+
+/* ========================
+   INFO BUTTONS & POPOVERS
+   ======================== */
+
+.card-relative {
+  position: relative;
+}
+
+.info-corner-btn {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  border: 1.5px solid var(--color-border);
+  background: #fff;
+  color: var(--color-text-secondary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.813rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s;
+  z-index: 10;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+}
+
+.info-corner-btn:hover {
+  border-color: var(--color-primary);
+  color: var(--color-primary);
+  background: var(--color-surface-alt);
+  transform: scale(1.1);
+}
+
+.info-popover {
+  position: absolute;
+  top: 3.25rem;
+  right: 1rem;
+  width: 300px;
+  background: #fff;
+  border: 1px solid var(--color-border);
+  border-radius: 12px;
+  padding: 1.25rem;
+  box-shadow: 0 12px 35px rgba(0, 0, 0, 0.12);
+  z-index: 20;
+  font-size: 0.875rem;
+  line-height: 1.6;
+  color: var(--color-text);
+  animation: slideDownIn 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes slideDownIn {
+  from { opacity: 0; transform: translateY(-10px) scale(0.98); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+.dynamic-label {
+  margin-top: 0.625rem;
+  padding: 0.4rem 0.75rem;
+  background: var(--color-surface-alt);
+  border-radius: 6px;
+  font-size: 0.813rem;
+  font-weight: 600;
+  color: #1a1a1a;
+  text-align: center;
+  animation: fadeIn 0.3s ease;
+  width: fit-content;
+  margin-left: auto;
+  margin-right: auto;
 }
 
 /* ========================

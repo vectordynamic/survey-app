@@ -14,15 +14,6 @@ const NAV_ITEMS = [
         ),
     },
     {
-        label: 'Questions',
-        path: '/admin/questions',
-        icon: (
-            <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 6.75h12M8.25 12h12m-12 5.25h12M3.75 6.75h.007v.008H3.75V6.75zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zM3.75 12h.007v.008H3.75V12zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm-.375 5.25h.007v.008H3.75v-.008zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z" />
-            </svg>
-        ),
-    },
-    {
         label: 'Analytics',
         path: '/admin/analytics',
         icon: (
@@ -37,6 +28,15 @@ const NAV_ITEMS = [
         icon: (
             <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M15 19.128a9.38 9.38 0 002.625.372 9.337 9.337 0 004.121-.952 4.125 4.125 0 00-2.533-4.126 9.354 9.354 0 00-5.463 0 4.125 4.125 0 00-2.533 4.126 9.354 9.354 0 004.121.952zm-9-9.128a9.38 9.38 0 002.625.372 9.337 9.337 0 004.121-.952 4.125 4.125 0 00-2.533-4.126 9.354 9.354 0 00-5.463 0 4.125 4.125 0 00-2.533 4.126 9.354 9.354 0 004.121.952zm12 0a2.25 2.25 0 100-4.5 2.25 2.25 0 000 4.5zM6 10a2.25 2.25 0 100-4.5 2.25 2.25 0 000 4.5zM15 13.5a2.25 2.25 0 014.5 0v.75m0 0l-3-3m3 3l-3 3" />
+            </svg>
+        ),
+    },
+    {
+        label: 'Questions',
+        path: '/admin/questions',
+        icon: (
+            <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" />
             </svg>
         ),
     },

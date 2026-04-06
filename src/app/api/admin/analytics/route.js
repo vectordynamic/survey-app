@@ -2,20 +2,51 @@ import { NextResponse } from 'next/server';
 import dbConnect from '@/lib/dbConnect';
 import Response from '@/models/Response';
 import Question from '@/models/Question';
+import Admin from '@/models/Admin';
+import jwt from 'jsonwebtoken';
 
-export async function GET() {
+const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key';
+
+export async function GET(request) {
     try {
         await dbConnect();
 
-        const questions = await Question.find({}).sort({ order: 1 });
-        const analytics = [];
+        // 1. Authenticate Admin
+        const authHeader = request.headers.get('authorization');
+        if (!authHeader || !authHeader.startsWith('Bearer ')) {
+            return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+        }
 
-        for (const question of questions) {
-            const responses = await Response.find({ questionId: question._id });
+        const token = authHeader.split(' ')[1];
+        const decoded = jwt.verify(token, JWT_SECRET);
+        const adminId = decoded.adminId || decoded.id;
+        const admin = await Admin.findById(adminId);
+        if (!admin) {
+            return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+        }
+
+        // 2. Fetch all questions and responses
+        const questions = await Question.find({}).sort({ order: 1 });
+        
+        // Fetch ALL responses and populate participant names
+        const allResponses = await Response.find({})
+            .populate('participantId', 'fullName')
+            .lean();
+
+        // 3. Group responses by questionId for fast lookup
+        const respByQ = {};
+        allResponses.forEach(r => {
+            if (!respByQ[r.questionId]) respByQ[r.questionId] = [];
+            respByQ[r.questionId].push(r);
+        });
+
+        // 4. Generate Analytics
+        const analytics = questions.map(question => {
+            const responses = respByQ[question._id.toString()] || [];
             const total = responses.length;
 
             if (total === 0) {
-                analytics.push({
+                return {
                     _id: question._id,
                     order: question.order,
                     datasetName: question.datasetName,
@@ -24,17 +55,22 @@ export async function GET() {
                     avgImportance: 0,
                     feasibilityYes: 0,
                     feasibilityNo: 0,
-                    relevanceYes: 0,
-                    relevanceNo: 0,
-                });
-                continue;
+                    comments: []
+                };
             }
 
             const importanceSum = responses.reduce((sum, r) => sum + (r.importance || 0), 0);
             const feasibilityYes = responses.filter(r => r.feasibility === true).length;
-            const relevanceYes = responses.filter(r => r.relevance === true).length;
+            
+            // Extract comments with participant names as requested
+            const comments = responses
+                .filter(r => r.comment && r.comment.trim())
+                .map(r => ({
+                    participantName: r.participantId?.fullName || 'Anonymous',
+                    text: r.comment
+                }));
 
-            analytics.push({
+            return {
                 _id: question._id,
                 order: question.order,
                 datasetName: question.datasetName,
@@ -43,10 +79,9 @@ export async function GET() {
                 avgImportance: (importanceSum / total).toFixed(2),
                 feasibilityYes,
                 feasibilityNo: total - feasibilityYes,
-                relevanceYes,
-                relevanceNo: total - relevanceYes,
-            });
-        }
+                comments: comments
+            };
+        });
 
         return NextResponse.json({ analytics });
     } catch (error) {

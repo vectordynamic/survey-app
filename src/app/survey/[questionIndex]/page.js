@@ -17,7 +17,6 @@ export default function SurveyPage() {
     const [formData, setFormData] = useState({
         importance: 0,
         feasibility: null,
-        relevance: null,
         comment: '',
     });
 
@@ -67,11 +66,10 @@ export default function SurveyPage() {
             setFormData({
                 importance: saved.importance || 0,
                 feasibility: saved.feasibility,
-                relevance: saved.relevance,
                 comment: saved.comment || '',
             });
         } else {
-            setFormData({ importance: 0, feasibility: null, relevance: null, comment: '' });
+            setFormData({ importance: 0, feasibility: null, comment: '' });
         }
     }, [questionIndex, questions, responses]);
 
@@ -81,51 +79,89 @@ export default function SurveyPage() {
 
     const handleSave = useCallback(async (navigateTo) => {
         if (!currentQuestion || !participantId) return;
-        setSaving(true);
-        try {
-            const res = await fetch('/api/survey/submit', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    participantId,
-                    questionId: currentQuestion._id,
-                    ...formData,
-                }),
-            });
 
-            if (res.ok) {
-                // Update local responses
-                setResponses((prev) => ({
-                    ...prev,
-                    [currentQuestion._id]: { ...formData, questionId: currentQuestion._id },
-                }));
+        // Rule: Either both ratings are filled OR a comment is provided
+        const isStandardComplete = formData.importance > 0 && formData.feasibility !== null;
+        const isCommentComplete = formData.comment && formData.comment.trim().length > 0;
+        const isComplete = isStandardComplete || isCommentComplete;
 
-                if (navigateTo === 'next') {
-                    if (questionIndex >= totalQuestions) {
-                        alert('🎉 Congratulations! You have completed the survey. Thank you!');
-                        router.push('/');
-                    } else {
-                        router.push(`/survey/${questionIndex + 1}`);
-                    }
-                } else if (navigateTo === 'prev') {
-                    if (questionIndex > 1) {
-                        router.push(`/survey/${questionIndex - 1}`);
-                    }
-                } else if (navigateTo === 'exit') {
-                    router.push('/');
-                } else if (typeof navigateTo === 'number') {
-                    router.push(`/survey/${navigateTo}`);
+        if (isComplete) {
+            setSaving(true);
+            try {
+                const res = await fetch('/api/survey/submit', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        participantId,
+                        questionId: currentQuestion._id,
+                        ...formData,
+                    }),
+                });
+
+                if (res.ok) {
+                    setResponses((prev) => ({
+                        ...prev,
+                        [currentQuestion._id]: { ...formData, questionId: currentQuestion._id },
+                    }));
                 }
+            } catch (err) {
+                console.error('Error saving survey:', err);
+            } finally {
+                setSaving(false);
             }
-        } catch (err) {
-            alert('Error saving. Please try again.');
-        } finally {
-            setSaving(false);
         }
-    }, [currentQuestion, participantId, formData, questionIndex, totalQuestions, router]);
+
+        // Navigation logic
+        if (navigateTo === 'next') {
+            if (questionIndex >= totalQuestions) {
+                // Global Completion Check
+                const missingCount = questions.filter(q => {
+                    const r = responses[q._id];
+                    // If it's the current question, use formData instead of state (which might not be updated yet)
+                    if (q._id === currentQuestion._id) return !isComplete;
+                    
+                    if (!r) return true;
+                    return !( (r.importance > 0 && r.feasibility !== null) || (r.comment && r.comment.trim().length > 0) );
+                }).length;
+
+                if (missingCount > 0) {
+                    alert(`You have ${missingCount} unanswered questions. Please provide either a rating or a comment for each before finishing the survey.`);
+                    return;
+                }
+
+                alert('🎉 Congratulations! You have completed the survey. Thank you!');
+                router.push('/');
+            } else {
+                router.push(`/survey/${questionIndex + 1}`);
+            }
+        } else if (navigateTo === 'prev') {
+            if (questionIndex > 1) {
+                router.push(`/survey/${questionIndex - 1}`);
+            }
+        } else if (navigateTo === 'exit') {
+            router.push('/');
+        } else if (typeof navigateTo === 'number') {
+            router.push(`/survey/${navigateTo}`);
+        }
+    }, [currentQuestion, participantId, formData, questionIndex, totalQuestions, questions, responses, router]);
 
     const isQuestionAnswered = (qId) => {
-        return responses[qId] !== undefined;
+        const res = responses[qId];
+        if (!res) return false;
+        return (res.importance > 0 && res.feasibility !== null) || (res.comment && res.comment.trim().length > 0);
+    };
+
+    const [activePopover, setActivePopover] = useState(null);
+
+    const importanceLabels = {
+        1: 'Not important',
+        2: 'Slightly important',
+        3: 'Important',
+        4: 'Very important',
+    };
+
+    const togglePopover = (id) => {
+        setActivePopover(activePopover === id ? null : id);
     };
 
     if (loading) {
@@ -153,7 +189,7 @@ export default function SurveyPage() {
     }
 
     return (
-        <div style={{ minHeight: '100vh', background: 'var(--color-surface)', display: 'flex', flexDirection: 'column' }}>
+        <div style={{ minHeight: '100vh', background: 'var(--color-surface)', display: 'flex', flexDirection: 'column' }} onClick={() => setActivePopover(null)}>
             {/* Top Navigation Bar */}
             <div style={{
                 position: 'sticky',
@@ -190,7 +226,7 @@ export default function SurveyPage() {
                         </div>
                     </div>
                     <button
-                        onClick={() => setShowMap(!showMap)}
+                        onClick={(e) => { e.stopPropagation(); setShowMap(!showMap); }}
                         style={{
                             background: showMap ? 'var(--color-primary)' : 'var(--color-surface-alt)',
                             border: '1px solid ' + (showMap ? 'var(--color-primary)' : 'var(--color-border)'),
@@ -211,20 +247,22 @@ export default function SurveyPage() {
 
             {/* Question Map Drawer */}
             {showMap && (
-                <div style={{
-                    position: 'fixed',
-                    top: 0,
-                    right: 0,
-                    bottom: 0,
-                    width: '280px',
-                    maxWidth: '85vw',
-                    background: '#fff',
-                    borderLeft: '1px solid var(--color-border)',
-                    boxShadow: '-8px 0 30px rgba(0,0,0,0.08)',
-                    zIndex: 100,
-                    padding: '1.25rem',
-                    overflowY: 'auto',
-                    animation: 'slideFromRight 0.2s ease',
+                <div 
+                    onClick={(e) => e.stopPropagation()}
+                    style={{
+                        position: 'fixed',
+                        top: 0,
+                        right: 0,
+                        bottom: 0,
+                        width: '280px',
+                        maxWidth: '85vw',
+                        background: '#fff',
+                        borderLeft: '1px solid var(--color-border)',
+                        boxShadow: '-8px 0 30px rgba(0,0,0,0.08)',
+                        zIndex: 100,
+                        padding: '1.25rem',
+                        overflowY: 'auto',
+                        animation: 'slideFromRight 0.2s ease',
                 }}>
                     <style>{`@keyframes slideFromRight { from { transform: translateX(100%); } to { transform: translateX(0); } }`}</style>
                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1rem' }}>
@@ -274,39 +312,70 @@ export default function SurveyPage() {
                     marginBottom: '1rem',
                     background: 'var(--color-surface-alt)',
                     borderLeft: '3px solid var(--color-accent)',
+                    padding: '0'
                 }}>
-                    <h4 style={{ margin: '0 0 0.75rem', fontSize: '0.75rem', fontWeight: 600, color: 'var(--color-text-secondary)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-                        Question Context
-                    </h4>
-                    <div style={{ display: 'grid', gap: '0.625rem' }}>
-                        {[
-                            { label: 'Facility Category', value: currentQuestion.facilityCategory },
-                            { label: 'Dataset Name', value: currentQuestion.datasetName },
-                            { label: 'Data Elements', value: currentQuestion.dataElements },
-                            { label: 'Suggested Disaggregates', value: currentQuestion.suggestedDisaggregates },
-                        ].map((item, i) => (
-                            <div key={i}>
-                                <span style={{ fontSize: '0.688rem', fontWeight: 600, color: 'var(--color-text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-                                    {item.label}
-                                </span>
-                                <p style={{ margin: '0.125rem 0 0', fontSize: '0.875rem', color: 'var(--color-text)', lineHeight: 1.5 }}>
-                                    {item.value || '—'}
-                                </p>
-                            </div>
-                        ))}
+                    <div style={{ 
+                        background: 'var(--color-primary-dark)', 
+                        color: '#fff', 
+                        padding: '0.75rem 1rem', 
+                        borderTopLeftRadius: '12px', 
+                        borderTopRightRadius: '12px',
+                        textAlign: 'center'
+                    }}>
+                        <h3 style={{ margin: 0, fontSize: '0.938rem', fontWeight: 600 }}>{currentQuestion.dataTitle || 'Survey Dataset'}</h3>
+                    </div>
+                    
+                    <div style={{ padding: '1.25rem 1.25rem 1rem' }}>
+                        <h4 style={{ margin: '0 0 1rem', fontSize: '0.75rem', fontWeight: 600, color: 'var(--color-text-secondary)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                            Question Context
+                        </h4>
+                        <div style={{ display: 'grid', gap: '0.625rem' }}>
+                            {[
+                                { label: 'Dataset Name', value: currentQuestion.datasetName },
+                                { label: 'Data Elements', value: currentQuestion.dataElements },
+                                { label: 'Suggested Disaggregates', value: currentQuestion.suggestedDisaggregates },
+                            ].map((item, i) => (
+                                <div key={i}>
+                                    <span style={{ fontSize: '0.688rem', fontWeight: 600, color: 'var(--color-text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                                        {item.label}
+                                    </span>
+                                    <p style={{ margin: '0.125rem 0 0', fontSize: '0.875rem', color: 'var(--color-text)', lineHeight: 1.5 }}>
+                                        {item.value || '—'}
+                                    </p>
+                                </div>
+                            ))}
+                        </div>
                     </div>
                 </div>
 
                 {/* Importance Rating */}
-                <div className="card animate-slide-up" style={{ marginBottom: '1rem', animationDelay: '0.05s' }}>
+                <div className="card animate-slide-up card-relative" style={{ marginBottom: '1rem', animationDelay: '0.05s' }}>
+                    <button 
+                        className="info-corner-btn" 
+                        title="View Definitions"
+                        onClick={(e) => { e.stopPropagation(); togglePopover('importance'); }}
+                    >i</button>
+                    
+                    {activePopover === 'importance' && (
+                        <div className="info-popover" onClick={(e) => e.stopPropagation()}>
+                            <h5 style={{ fontWeight: 700, marginBottom: '0.5rem', color: 'var(--color-primary)' }}>Importance Rating:</h5>
+                            <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
+                                <li><strong>1</strong> = Not important</li>
+                                <li><strong>2</strong> = Slightly important</li>
+                                <li><strong>3</strong> = Important</li>
+                                <li><strong>4</strong> = Very important</li>
+                            </ul>
+                        </div>
+                    )}
+
                     <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 600, color: 'var(--color-text)', marginBottom: '0.625rem' }}>
-                        1. Importance <span style={{ fontWeight: 400, color: 'var(--color-text-muted)', fontSize: '0.813rem' }}>(Rate 1 to 5)</span>
+                        1. Importance <span style={{ fontWeight: 400, color: 'var(--color-text-muted)', fontSize: '0.813rem' }}>(Rate 1 to 4)</span>
                     </label>
                     <div className="star-rating">
-                        {[1, 2, 3, 4, 5].map((num) => (
+                        {[1, 2, 3, 4].map((num) => (
                             <button
                                 key={num}
-                                className={`star-btn ${formData.importance >= num ? 'active' : ''}`}
+                                className={`star-btn ${formData.importance === num ? 'active' : ''}`}
                                 onClick={() => setFormData({ ...formData, importance: num })}
                                 type="button"
                             >
@@ -314,14 +383,29 @@ export default function SurveyPage() {
                             </button>
                         ))}
                     </div>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '0.375rem', fontSize: '0.688rem', color: 'var(--color-text-muted)' }}>
-                        <span>Not Important</span>
-                        <span>Very Important</span>
-                    </div>
+                    {formData.importance > 0 && (
+                        <div className="dynamic-label">
+                            {importanceLabels[formData.importance]}
+                        </div>
+                    )}
                 </div>
 
                 {/* Feasibility */}
-                <div className="card animate-slide-up" style={{ marginBottom: '1rem', animationDelay: '0.1s' }}>
+                <div className="card animate-slide-up card-relative" style={{ marginBottom: '1rem', animationDelay: '0.1s' }}>
+                    <button 
+                        className="info-corner-btn" 
+                        title="View Definitions"
+                        onClick={(e) => { e.stopPropagation(); togglePopover('feasibility'); }}
+                    >i</button>
+
+                    {activePopover === 'feasibility' && (
+                        <div className="info-popover" onClick={(e) => e.stopPropagation()}>
+                            <h5 style={{ fontWeight: 700, marginBottom: '0.5rem', color: 'var(--color-primary)' }}>Feasibility of Data Generation:</h5>
+                            <p style={{ marginBottom: '0.5rem' }}><strong>Yes</strong> = The data element is feasible to generate/collect within the existing health system</p>
+                            <p><strong>No</strong> = The data element is not feasible to generate/collect within the existing health system and requires additional support</p>
+                        </div>
+                    )}
+
                     <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 600, color: 'var(--color-text)', marginBottom: '0.625rem' }}>
                         2. Feasibility of Data Generation
                     </label>
@@ -343,33 +427,10 @@ export default function SurveyPage() {
                     </div>
                 </div>
 
-                {/* Relevance */}
-                <div className="card animate-slide-up" style={{ marginBottom: '1rem', animationDelay: '0.15s' }}>
-                    <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 600, color: 'var(--color-text)', marginBottom: '0.625rem' }}>
-                        3. Practical Relevance for Decision-Making
-                    </label>
-                    <div className="radio-group">
-                        <label
-                            className={`radio-card ${formData.relevance === true ? 'active' : ''}`}
-                            onClick={() => setFormData({ ...formData, relevance: true })}
-                        >
-                            <input type="radio" name="relevance" checked={formData.relevance === true} readOnly />
-                            Yes
-                        </label>
-                        <label
-                            className={`radio-card ${formData.relevance === false ? 'active' : ''}`}
-                            onClick={() => setFormData({ ...formData, relevance: false })}
-                        >
-                            <input type="radio" name="relevance" checked={formData.relevance === false} readOnly />
-                            No
-                        </label>
-                    </div>
-                </div>
-
                 {/* Comments */}
                 <div className="card animate-slide-up" style={{ marginBottom: '1rem', animationDelay: '0.2s' }}>
                     <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 600, color: 'var(--color-text)', marginBottom: '0.625rem' }}>
-                        4. Comments <span style={{ fontWeight: 400, color: 'var(--color-text-muted)', fontSize: '0.813rem' }}>(Optional)</span>
+                        3. Comments <span style={{ fontWeight: 400, color: 'var(--color-text-muted)', fontSize: '0.813rem' }}>(Optional)</span>
                     </label>
                     <textarea
                         className="form-textarea"
