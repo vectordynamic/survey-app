@@ -129,8 +129,8 @@ export default function LandingPage() {
           }}>
             📋 PhD Research Study
           </div>
-          <h1>DHIS2 Data Utilization Model Research Survey</h1>
-          <p>Primary Health Care Data Utilization Survey — Collecting structured feedback from health professionals in Bangladesh</p>
+          <h1>Development of a Primary Health Care Oriented Data Utilization Model for District Health Information Software 2 (DHIS2)</h1>
+          <p>To Support Decision Making by Primary Level Health Managers in Bangladesh</p>
         </div>
       </div>
 
