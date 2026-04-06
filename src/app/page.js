@@ -65,6 +65,12 @@ export default function LandingPage() {
       });
       const data = await res.json();
 
+      if (res.status === 403) {
+        alert(data.message || 'This phone number is not authorized to participate in this study.');
+        setLoading(false);
+        return;
+      }
+
       if (data.exists) {
         // Save participant info in localStorage
         localStorage.setItem('participantId', data.participant._id);
@@ -80,6 +86,10 @@ export default function LandingPage() {
       } else {
         // New user - go to registration
         localStorage.setItem('participantPhone', phone.trim());
+        // If the API returned a name from the whitelist, we could store it to pre-fill
+        if (data.whitelistedName) {
+            localStorage.setItem('whitelistedName', data.whitelistedName);
+        }
         router.push('/register');
       }
     } catch (err) {
@@ -147,8 +157,9 @@ export default function LandingPage() {
               <h3 style={{ margin: 0, fontSize: '1.25rem', fontWeight: 600, color: 'var(--color-text)' }}>
                 Dr. Md. Nazmul Hassan Refat
               </h3>
-              <p style={{ margin: '0.125rem 0 0', fontSize: '0.875rem', color: 'var(--color-text-secondary)', fontWeight: 500 }}>
-                Assistant Professor & Head, Dept. of Public Health Informatics<br />
+              <p style={{ margin: '0.125rem 0 0', fontSize: '0.875rem', color: 'var(--color-text-secondary)', lineHeight: 1.5, fontWeight: 500 }}>
+                Assistant Professor, Department of Public Health & Hospital Administration &<br />
+                Head, Department of Public Health Informatics<br />
                 National Institute of Preventive and Social Medicine (NIPSOM)
               </p>
             </div>

@@ -33,8 +33,17 @@ export default function RegisterPage() {
     useEffect(() => {
         // Pre-fill phone from localStorage if saved from landing page
         const savedPhone = localStorage.getItem('participantPhone');
-        if (savedPhone) {
-            setForm((prev) => ({ ...prev, phone: savedPhone }));
+        const savedName = localStorage.getItem('whitelistedName');
+
+        if (savedPhone || savedName) {
+            setForm((prev) => ({ 
+                ...prev, 
+                phone: savedPhone || '',
+                fullName: savedName || ''
+            }));
+            
+            // Clean up the whitelisted name so it doesn't persist across different user attempts
+            if (savedName) localStorage.removeItem('whitelistedName');
         }
     }, []);
 

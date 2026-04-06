@@ -31,6 +31,15 @@ const NAV_ITEMS = [
             </svg>
         ),
     },
+    {
+        label: 'Participants',
+        path: '/admin/participants',
+        icon: (
+            <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M15 19.128a9.38 9.38 0 002.625.372 9.337 9.337 0 004.121-.952 4.125 4.125 0 00-2.533-4.126 9.354 9.354 0 00-5.463 0 4.125 4.125 0 00-2.533 4.126 9.354 9.354 0 004.121.952zm-9-9.128a9.38 9.38 0 002.625.372 9.337 9.337 0 004.121-.952 4.125 4.125 0 00-2.533-4.126 9.354 9.354 0 00-5.463 0 4.125 4.125 0 00-2.533 4.126 9.354 9.354 0 004.121.952zm12 0a2.25 2.25 0 100-4.5 2.25 2.25 0 000 4.5zM6 10a2.25 2.25 0 100-4.5 2.25 2.25 0 000 4.5zM15 13.5a2.25 2.25 0 014.5 0v.75m0 0l-3-3m3 3l-3 3" />
+            </svg>
+        ),
+    },
 ];
 
 export default function AdminLayout({ children }) {
