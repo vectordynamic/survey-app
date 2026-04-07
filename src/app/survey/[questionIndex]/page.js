@@ -317,12 +317,15 @@ export default function SurveyPage() {
                     <div style={{ 
                         background: 'var(--color-primary-dark)', 
                         color: '#fff', 
-                        padding: '0.75rem 1rem', 
+                        padding: '1rem', 
                         borderTopLeftRadius: '12px', 
                         borderTopRightRadius: '12px',
                         textAlign: 'center'
                     }}>
-                        <h3 style={{ margin: 0, fontSize: '0.938rem', fontWeight: 600 }}>{currentQuestion.dataTitle || 'Survey Dataset'}</h3>
+                        <div style={{ fontSize: '0.625rem', textTransform: 'uppercase', letterSpacing: '0.1em', opacity: 0.8, marginBottom: '0.25rem' }}>
+                            Dataset Name
+                        </div>
+                        <h3 style={{ margin: 0, fontSize: '1rem', fontWeight: 700 }}>{currentQuestion.datasetName || 'Survey Dataset'}</h3>
                     </div>
                     
                     <div style={{ padding: '1.25rem 1.25rem 1rem' }}>

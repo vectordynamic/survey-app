@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import XLSX from 'xlsx';
+import * as XLSX from 'xlsx';
 import dbConnect from '@/lib/dbConnect';
 import Question from '@/models/Question';
 import Admin from '@/models/Admin';
