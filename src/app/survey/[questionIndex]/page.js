@@ -113,6 +113,10 @@ export default function SurveyPage() {
 
         // Navigation logic
         if (navigateTo === 'next') {
+            if (!isComplete) {
+                alert('Please provide an assessment or a brief remark to proceed.');
+                return;
+            }
             if (questionIndex >= totalQuestions) {
                 // Global Completion Check
                 const missingCount = questions.filter(q => {
@@ -286,6 +290,11 @@ export default function SurveyPage() {
                                 key={q._id}
                                 className={`question-grid-btn ${isQuestionAnswered(q._id) ? 'completed' : ''} ${i + 1 === questionIndex ? 'active' : ''}`}
                                 onClick={() => {
+                                    const isCurrentComplete = (formData.importance > 0 && formData.feasibility !== null) || (formData.comment && formData.comment.trim().length > 0);
+                                    if (!isCurrentComplete && (i + 1) > questionIndex) {
+                                        alert('Please provide a response or a brief remark before moving to the next question.');
+                                        return;
+                                    }
                                     setShowMap(false);
                                     handleSave(i + 1);
                                 }}
@@ -433,11 +442,11 @@ export default function SurveyPage() {
                 {/* Comments */}
                 <div className="card animate-slide-up" style={{ marginBottom: '1rem', animationDelay: '0.2s' }}>
                     <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 600, color: 'var(--color-text)', marginBottom: '0.625rem' }}>
-                        3. Comments <span style={{ fontWeight: 400, color: 'var(--color-text-muted)', fontSize: '0.813rem' }}>(Optional)</span>
+                        3. Remarks <span style={{ fontWeight: 400, color: 'var(--color-text-muted)', fontSize: '0.813rem' }}>(Kindly provide a reason if you choose not to respond to this data element)</span>
                     </label>
                     <textarea
                         className="form-textarea"
-                        placeholder="Add any additional comments or feedback..."
+                        placeholder="State the reason for non-response or provide additional suggestions here..."
                         value={formData.comment}
                         onChange={(e) => setFormData({ ...formData, comment: e.target.value })}
                         rows={3}

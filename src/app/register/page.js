@@ -4,6 +4,7 @@ import { useRouter } from 'next/navigation';
 import { upazilas } from '@/lib/upazilaData';
 
 const GENDERS = ['Male', 'Female', 'Other'];
+const EDU_OPTIONS = ['MBBS', 'MPH', 'Diploma', 'M Phil', 'FCPS', 'MD/MS', 'Others'];
 
 export default function RegisterPage() {
     const router = useRouter();
@@ -18,6 +19,8 @@ export default function RegisterPage() {
         experienceMonths: '',
         upazila: '',
     });
+
+    const [eduSelection, setEduSelection] = useState('');
 
     // Searchable Upazila state
     const [searchTerm, setSearchTerm] = useState('');
@@ -158,18 +161,40 @@ export default function RegisterPage() {
                         
                         <div className="form-group">
                             <label className="form-label form-label-required">Educational Qualification</label>
-                            <input
-                                type="text"
-                                className="form-input"
-                                placeholder="Highest level (e.g. MBBS, MPH, PhD)"
-                                value={form.educationalQualification}
-                                onChange={(e) => updateField('educationalQualification', e.target.value)}
+                            <select 
+                                className="form-select" 
+                                value={eduSelection}
+                                onChange={(e) => {
+                                    const val = e.target.value;
+                                    setEduSelection(val);
+                                    if (val !== 'Others') {
+                                        updateField('educationalQualification', val);
+                                    } else {
+                                        updateField('educationalQualification', '');
+                                    }
+                                }}
                                 required
-                            />
+                            >
+                                <option value="">Select Qualification</option>
+                                {EDU_OPTIONS.map(opt => <option key={opt} value={opt}>{opt}</option>)}
+                            </select>
+                            
+                            {eduSelection === 'Others' && (
+                                <div className="animate-slide-up" style={{ marginTop: '0.75rem' }}>
+                                    <input
+                                        type="text"
+                                        className="form-input"
+                                        placeholder="Please specify your qualification"
+                                        value={form.educationalQualification}
+                                        onChange={(e) => updateField('educationalQualification', e.target.value)}
+                                        required
+                                    />
+                                </div>
+                            )}
                         </div>
 
                         <div className="form-group">
-                            <label className="form-label form-label-required">Experience as USHFPO (Tenure)</label>
+                            <label className="form-label form-label-required">Experience as UH&FPO(Tenure)</label>
                             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
                                 <div style={{ position: 'relative' }}>
                                     <input

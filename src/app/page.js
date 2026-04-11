@@ -115,18 +115,20 @@ export default function LandingPage() {
     <div style={{ minHeight: '100vh', background: 'var(--color-surface)' }}>
       {/* Hero Section */}
       <div className="landing-hero">
-        <div style={{ maxWidth: 600, margin: '0 auto' }}>
+        <div style={{ maxWidth: 850, margin: '0 auto' }}>
           <div style={{
             display: 'inline-flex',
             alignItems: 'center',
             gap: '0.5rem',
-            background: 'rgba(255,255,255,0.12)',
-            padding: '0.375rem 1rem',
+            background: 'rgba(255,255,255,0.15)',
+            border: '1px solid rgba(255,255,255,0.25)',
+            padding: '0.625rem 1.75rem',
             borderRadius: '99px',
-            fontSize: '0.75rem',
-            fontWeight: 500,
-            marginBottom: '1.25rem',
-            letterSpacing: '0.03em',
+            fontSize: '1rem',
+            fontWeight: 700,
+            marginBottom: '2rem',
+            letterSpacing: '0.05em',
+            textTransform: 'uppercase',
           }}>
             📋 PhD Research Study
           </div>
@@ -155,7 +157,7 @@ export default function LandingPage() {
               NR
             </div>
             <div>
-              <h3 style={{ margin: 0, fontSize: '1.25rem', fontWeight: 600, color: 'var(--color-text)' }}>
+              <h3 style={{ margin: 0, fontSize: '1.75rem', fontWeight: 800, color: 'var(--color-text)' }}>
                 Dr. Md. Nazmul Hassan Refat
               </h3>
               <p style={{ margin: '0.125rem 0 0', fontSize: '0.875rem', color: 'var(--color-text-secondary)', lineHeight: 1.5, fontWeight: 500 }}>
@@ -254,29 +256,78 @@ export default function LandingPage() {
                 WebkitOverflowScrolling: 'touch'
               }}
             >
-              <h5 style={{ color: 'var(--color-text)', marginTop: 0 }}>Voluntary Participation</h5>
-              <p>Your participation in this survey is entirely voluntary. You may choose not to participate or may exit the survey at any time before submission without any penalty or consequences.</p>
+              <h4 style={{ color: 'var(--color-text)', marginTop: 0, textAlign: 'center', fontSize: '1rem', fontWeight: 700 }}>INFORMED CONSENT FORM</h4>
+              <p style={{ textAlign: 'center', fontWeight: 600, marginTop: '-0.5rem', marginBottom: '1.5rem' }}>(ONLINE SURVEY PARTICIPATION)</p>
               
-              <h5 style={{ color: 'var(--color-text)' }}>Risks and Discomforts</h5>
-              <p>This study involves minimal risk. There are no expected physical or psychological risks. You may skip any question you do not wish to answer.</p>
+              <h5 style={{ color: 'var(--color-text)', marginBottom: '0.25rem', fontSize: '0.9rem' }}>Title of the Study</h5>
+              <p style={{ marginTop: 0, marginBottom: '1.25rem' }}>Development of a Primary Health Care Oriented Data Utilization Model for District Health Information Software 2 (DHIS2) to Support Decision Making by Primary Level Health Managers in Bangladesh</p>
               
-              <h5 style={{ color: 'var(--color-text)' }}>Benefits of Participation</h5>
-              <p>Although there is no direct personal benefit, your participation will contribute to improving data-driven decision-making tools for primary healthcare management in Bangladesh. The findings may support better planning, resource allocation, and service delivery at the Upazila level.</p>
-              
-              <h5 style={{ color: 'var(--color-text)' }}>Confidentiality and Data Security</h5>
+              <h5 style={{ color: 'var(--color-text)', marginBottom: '0.25rem', fontSize: '0.9rem' }}>Name of the Researcher</h5>
+              <p style={{ marginTop: 0, marginBottom: '1.25rem' }}>
+                <strong>Dr. Md. Nazmul Hassan Refat</strong><br />
+                Doctoral Student, Department of Public Health & Informatics, Jahangirnagar University<br />
+                Assistant Professor, Department of Public Health & Hospital Administration &<br />
+                Head, Department of Public health Informatics, NIPSOM
+              </p>
+
+              <h5 style={{ color: 'var(--color-text)', fontSize: '0.9rem' }}>Purpose of the Study</h5>
+              <p>The purpose of this study is to design and develop a user-friendly, context-appropriate data utilization model within the District Health Information Software 2 (DHIS2) platform to support evidence-based decision-making by primary-level health managers in Bangladesh, particularly Upazila Health and Family Planning Officers (UH&FPOs).</p>
+              <p>This study will focus exclusively on Primary Health Care (PHC)-related data elements, ensuring that the model remains relevant, practical, and aligned with the routine functions and responsibilities at the primary level. The aim is to identify, prioritize, and structure essential PHC data in a way that is accessible and easy to interpret, enabling managers to effectively use system-generated reports for planning, resource allocation, monitoring, and improving service delivery at the Upazila level.</p>
+              <p style={{ marginBottom: '1.25rem' }}>This study is conducted solely for academic purposes as part of a PhD research program and has no commercial intent.</p>
+
+              <h5 style={{ color: 'var(--color-text)', fontSize: '0.9rem' }}>Why You Have Been Invited</h5>
+              <p style={{ marginBottom: '1.25rem' }}>You have been selected because of your role and experience as an Upazila Health and Family Planning Officer (UH&FPO) involved in primary health care service delivery and/or use of DHIS2 in Bangladesh.</p>
+
+              <h5 style={{ color: 'var(--color-text)', fontSize: '0.9rem' }}>Study Procedures (Online Survey)</h5>
+              <p>If you agree to participate, you will be asked to complete a structured questionnaire through a secure online survey application.</p>
               <ul style={{ paddingLeft: '1.2rem', marginBottom: '1rem' }}>
+                <li>The survey will be accessed via a provided web link or application interface.</li>
+                <li>You will be required to log in using your mobile phone number each time you access the survey application.</li>
+                <li>You may complete the survey using a computer, tablet, or smartphone.</li>
+                <li>The survey will include questions related to data use, prioritization, and decision-making in DHIS2.</li>
+                <li>The estimated time required to complete the survey is approximately 20–30 minutes.</li>
+              </ul>
+              <p>As part of the survey, for each data element, you will be requested to provide the following assessments:</p>
+              <ol style={{ paddingLeft: '1.2rem', marginBottom: '1.25rem' }}>
+                <li style={{ marginBottom: '0.5rem' }}><strong>Importance Rating (4-point Likert Scale):</strong>
+                  <ul style={{ listStyleType: 'none', paddingLeft: '0.5rem', marginTop: '0.25rem' }}>
+                    <li>• 1 = Not important</li>
+                    <li>• 2 = Slightly important</li>
+                    <li>• 3 = Important</li>
+                    <li>• 4 = Very important</li>
+                  </ul>
+                </li>
+                <li><strong>Feasibility of Data Generation:</strong>
+                  <ul style={{ listStyleType: 'none', paddingLeft: '0.5rem', marginTop: '0.25rem' }}>
+                    <li>• Yes = The data element is feasible to generate/collect within the existing health system</li>
+                    <li>• No = The data element is not feasible to generate/collect within the existing health system and requires additional support</li>
+                  </ul>
+                </li>
+              </ol>
+
+              <h5 style={{ color: 'var(--color-text)', fontSize: '0.9rem' }}>Voluntary Participation</h5>
+              <p style={{ marginBottom: '1.25rem' }}>Your participation in this survey is entirely voluntary. You may choose not to participate or may exit the survey at any time before submission without any penalty or consequences.</p>
+
+              <h5 style={{ color: 'var(--color-text)', fontSize: '0.9rem' }}>Risks and Discomforts</h5>
+              <p style={{ marginBottom: '1.25rem' }}>This study involves minimal risk. There are no expected physical or psychological risks. You may skip any question you do not wish to answer.</p>
+
+              <h5 style={{ color: 'var(--color-text)', fontSize: '0.9rem' }}>Benefits of Participation</h5>
+              <p style={{ marginBottom: '1.25rem' }}>Although there is no direct personal benefit, your participation will contribute to improving data-driven decision-making tools for primary healthcare management in Bangladesh. The findings may support better planning, resource allocation, and service delivery at the Upazila level.</p>
+
+              <h5 style={{ color: 'var(--color-text)', fontSize: '0.9rem' }}>Confidentiality and Data Security</h5>
+              <ul style={{ paddingLeft: '1.2rem', marginBottom: '1.25rem' }}>
                 <li>Your responses will be collected anonymously through a secure online system.</li>
                 <li>No personally identifiable information will be published or disclosed.</li>
                 <li>Data will be stored securely and accessed only by the research team.</li>
                 <li>All data will be analyzed in aggregated form for research purposes only.</li>
               </ul>
-              
-              <h5 style={{ color: 'var(--color-text)' }}>Right to Withdraw</h5>
-              <p>You have the right to stop participating at any point before submitting the survey. Once submitted, responses may not be withdrawn as they will be anonymized and integrated into the dataset.</p>
-              
-              <h5 style={{ color: 'var(--color-text)' }}>Contact Information</h5>
-              <p>
-                If you have any questions or concerns regarding this study, please contact:<br />
+
+              <h5 style={{ color: 'var(--color-text)', fontSize: '0.9rem' }}>Right to Withdraw</h5>
+              <p style={{ marginBottom: '1.25rem' }}>You have the right to stop participating at any point before submitting the survey. Once submitted, responses may not be withdrawn as they will be anonymized and integrated into the dataset.</p>
+
+              <h5 style={{ color: 'var(--color-text)', fontSize: '0.9rem' }}>Contact Information</h5>
+              <p style={{ marginBottom: '2rem' }}>
+                If you have any questions or concerns regarding this study, please contact:<br /><br />
                 <strong>Dr. Md. Nazmul Hassan Refat</strong><br />
                 Mobile: 01711305535<br />
                 Email: nazmulhassanrefat@gmail.com
@@ -288,9 +339,11 @@ export default function LandingPage() {
                 borderTop: '1px solid var(--color-border)', 
                 textAlign: 'center',
                 color: 'var(--color-primary)',
-                fontWeight: 600
+                fontWeight: 600,
+                fontSize: '0.75rem',
+                letterSpacing: '0.05em'
               }}>
-                --- Verification Complete: Bottom Reached ---
+                --- END OF INFORMED CONSENT FORM ---
               </div>
             </div>
 
