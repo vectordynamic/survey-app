@@ -13,28 +13,27 @@ export async function POST(request) {
             return NextResponse.json({ error: 'participantId and questionId are required' }, { status: 400 });
         }
 
-        // Upsert response (update if exists, create if not)
-        const response = await Response.findOneAndUpdate(
-            { participantId, questionId },
-            { importance, feasibility, relevance, comment },
-            { upsert: true, new: true }
-        );
+        // 1. Update response and fetch metadata in parallel
+        const [response, question, count] = await Promise.all([
+            Response.findOneAndUpdate(
+                { participantId, questionId },
+                { importance, feasibility, relevance, comment },
+                { upsert: true, new: true, lean: true }
+            ),
+            Question.findById(questionId, 'order').lean(),
+            Question.countDocuments()
+        ]);
 
-        // Get the question's order to update progress
-        const question = await Question.findById(questionId);
-        const totalQuestions = await Question.countDocuments();
-
-        // Update participant progress
-        const participant = await Participant.findById(participantId);
-        if (question && participant) {
-            const newIndex = Math.max(participant.lastAnsweredQuestionIndex, question.order);
-            const isComplete = newIndex >= totalQuestions;
-
+        // 2. Update participant progress atomically
+        if (question) {
+            const isComplete = question.order >= count;
             await Participant.findByIdAndUpdate(participantId, {
-                lastAnsweredQuestionIndex: newIndex,
-                isComplete,
+                $max: { lastAnsweredQuestionIndex: question.order },
+                $set: { isComplete }
             });
         }
+
+        return NextResponse.json({ success: true, response });
 
         return NextResponse.json({ success: true, response });
     } catch (error) {

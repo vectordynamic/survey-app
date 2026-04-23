@@ -13,6 +13,7 @@ export default function SurveyPage() {
     const [saving, setSaving] = useState(false);
     const [showMap, setShowMap] = useState(false);
     const [participantId, setParticipantId] = useState('');
+    const [alertConfig, setAlertConfig] = useState(null);
 
     const [formData, setFormData] = useState({
         importance: 0,
@@ -85,28 +86,28 @@ export default function SurveyPage() {
         const isCommentComplete = formData.comment && formData.comment.trim().length > 0;
         const isComplete = isStandardComplete || isCommentComplete;
 
+        // Optimistic State Update: update responses immediately so navigation logic sees the new state
         if (isComplete) {
-            setSaving(true);
-            try {
-                const res = await fetch('/api/survey/submit', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        participantId,
-                        questionId: currentQuestion._id,
-                        ...formData,
-                    }),
-                });
+            setResponses((prev) => ({
+                ...prev,
+                [currentQuestion._id]: { ...formData, questionId: currentQuestion._id },
+            }));
 
-                if (res.ok) {
-                    setResponses((prev) => ({
-                        ...prev,
-                        [currentQuestion._id]: { ...formData, questionId: currentQuestion._id },
-                    }));
-                }
-            } catch (err) {
-                console.error('Error saving survey:', err);
-            } finally {
+            // Save in background (don't await for simple next/prev/exit)
+            const savePromise = fetch('/api/survey/submit', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    participantId,
+                    questionId: currentQuestion._id,
+                    ...formData,
+                }),
+            }).catch(err => console.error('Background save failed:', err));
+
+            // Only await if we are completing the entire survey
+            if (navigateTo === 'next' && questionIndex >= totalQuestions) {
+                setSaving(true);
+                await savePromise;
                 setSaving(false);
             }
         }
@@ -114,27 +115,33 @@ export default function SurveyPage() {
         // Navigation logic
         if (navigateTo === 'next') {
             if (!isComplete) {
-                alert('Please provide an assessment or a brief remark to proceed.');
+                setAlertConfig({
+                    type: 'warning',
+                    text: 'পরবর্তী প্রশ্নে যাওয়ার পূর্বে অনুগ্রহ করে আপনার মূল্যায়ন প্রদান করুন অথবা একটি মন্তব্য লিখুন।'
+                });
                 return;
             }
             if (questionIndex >= totalQuestions) {
                 // Global Completion Check
                 const missingCount = questions.filter(q => {
-                    const r = responses[q._id];
-                    // If it's the current question, use formData instead of state (which might not be updated yet)
-                    if (q._id === currentQuestion._id) return !isComplete;
-                    
+                    const r = q._id === currentQuestion._id ? formData : responses[q._id];
                     if (!r) return true;
                     return !( (r.importance > 0 && r.feasibility !== null) || (r.comment && r.comment.trim().length > 0) );
                 }).length;
 
                 if (missingCount > 0) {
-                    alert(`You have ${missingCount} unanswered questions. Please provide either a rating or a comment for each before finishing the survey.`);
+                    setAlertConfig({
+                        type: 'warning',
+                        text: `আপনার ${missingCount} টি প্রশ্নের উত্তর দেওয়া বাকি আছে। দয়া করে সার্ভে শেষ করার আগে সেগুলোর মূল্যায়ন অথবা মন্তব্য প্রদান করুন।`
+                    });
                     return;
                 }
 
-                alert('🎉 Congratulations! You have completed the survey. Thank you!');
-                router.push('/');
+                setAlertConfig({
+                    type: 'success',
+                    text: '🎉 অভিনন্দন! আপনি সফলভাবে সার্ভেটি সম্পন্ন করেছেন। আপনাকে অসংখ্য ধন্যবাদ!',
+                    onClose: () => router.push('/')
+                });
             } else {
                 router.push(`/survey/${questionIndex + 1}`);
             }
@@ -143,7 +150,11 @@ export default function SurveyPage() {
                 router.push(`/survey/${questionIndex - 1}`);
             }
         } else if (navigateTo === 'exit') {
-            router.push('/');
+            setAlertConfig({
+                type: 'info',
+                text: 'আপনার অগ্রগতি সংরক্ষিত হয়েছে। আপনি পরবর্তীতে ঠিক এখান থেকেই সার্ভেটি পুনরায় শুরু করতে পারবেন।',
+                onClose: () => router.push('/')
+            });
         } else if (typeof navigateTo === 'number') {
             router.push(`/survey/${navigateTo}`);
         }
@@ -206,7 +217,7 @@ export default function SurveyPage() {
             }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', maxWidth: 600, margin: '0 auto' }}>
                     <button
-                        onClick={() => router.push('/')}
+                        onClick={() => router.push('/?view=consent')}
                         style={{
                             background: 'none', border: 'none', cursor: 'pointer', padding: '0.25rem',
                             color: 'var(--color-text-secondary)', display: 'flex',
@@ -292,7 +303,10 @@ export default function SurveyPage() {
                                 onClick={() => {
                                     const isCurrentComplete = (formData.importance > 0 && formData.feasibility !== null) || (formData.comment && formData.comment.trim().length > 0);
                                     if (!isCurrentComplete && (i + 1) > questionIndex) {
-                                        alert('Please provide a response or a brief remark before moving to the next question.');
+                                        setAlertConfig({
+                                            type: 'warning',
+                                            text: 'পরবর্তী প্রশ্নে যাওয়ার পূর্বে অনুগ্রহ করে আপনার মূল্যায়ন প্রদান করুন অথবা একটি মন্তব্য লিখুন।'
+                                        });
                                         return;
                                     }
                                     setShowMap(false);
@@ -503,6 +517,56 @@ export default function SurveyPage() {
                     </button>
                 </div>
             </div>
+
+            {/* Custom Alert Modal */}
+            {alertConfig && (
+                <div style={{
+                    position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', zIndex: 9999,
+                    display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1.25rem',
+                    animation: 'fadeIn 0.2s ease-out'
+                }}>
+                    <style>{`@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }`}</style>
+                    <div className="card animate-slide-up" style={{ 
+                        width: '100%', maxWidth: '340px', textAlign: 'center', padding: '2rem 1.5rem', 
+                        background: 'var(--color-surface)', boxShadow: '0 10px 40px rgba(0,0,0,0.2)',
+                        borderTop: alertConfig.type === 'warning' ? '4px solid var(--color-warning)' : 
+                                   alertConfig.type === 'success' ? '4px solid var(--color-success)' :
+                                   '4px solid var(--color-primary)'
+                    }}>
+                        <div style={{ marginBottom: '1rem' }}>
+                            {alertConfig.type === 'warning' && (
+                                <svg style={{ color: 'var(--color-warning)', margin: '0 auto' }} width="48" height="48" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                                    <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                                </svg>
+                            )}
+                            {alertConfig.type === 'success' && (
+                                <svg style={{ color: '#22c55e', margin: '0 auto' }} width="48" height="48" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                                    <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                </svg>
+                            )}
+                            {alertConfig.type === 'info' && (
+                                <svg style={{ color: 'var(--color-primary)', margin: '0 auto' }} width="48" height="48" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                                    <path strokeLinecap="round" strokeLinejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                </svg>
+                            )}
+                        </div>
+                        <p style={{ fontSize: '1.05rem', fontWeight: 600, color: 'var(--color-text)', marginBottom: '1.5rem', lineHeight: 1.5 }}>
+                            {alertConfig.text}
+                        </p>
+                        <button 
+                            onClick={() => {
+                                const onClose = alertConfig.onClose;
+                                setAlertConfig(null);
+                                if (onClose) onClose();
+                            }} 
+                            className="btn btn-primary" 
+                            style={{ width: '100%', padding: '0.75rem', fontSize: '1rem' }}
+                        >
+                            ঠিক আছে
+                        </button>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }

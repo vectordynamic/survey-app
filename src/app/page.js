@@ -14,6 +14,11 @@ export default function LandingPage() {
 
   useEffect(() => {
     const checkExistingSession = async () => {
+      const urlParams = new URLSearchParams(window.location.search);
+      if (urlParams.get('view') === 'consent') {
+        setIsCheckingSession(false);
+        return;
+      }
       const savedPhone = localStorage.getItem('participantPhone');
       if (savedPhone) {
         try {
@@ -49,20 +54,14 @@ export default function LandingPage() {
     }
   };
 
-  const handleProceed = () => {
-    setThankYouPopup(false);
-    setShowLogin(true);
-  };
-
-  const handlePhoneLogin = async (e) => {
-    e.preventDefault();
-    if (!phone.trim()) return;
+  const performLogin = async (phoneToUse) => {
+    if (!phoneToUse.trim()) return;
     setLoading(true);
     try {
       const res = await fetch('/api/auth/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ phone: phone.trim() }),
+        body: JSON.stringify({ phone: phoneToUse.trim() }),
       });
       const data = await res.json();
 
@@ -75,7 +74,7 @@ export default function LandingPage() {
       if (data.exists) {
         // Save participant info in localStorage
         localStorage.setItem('participantId', data.participant._id);
-        localStorage.setItem('participantPhone', phone.trim());
+        localStorage.setItem('participantPhone', phoneToUse.trim());
         localStorage.setItem('participantName', data.participant.fullName);
 
         if (data.participant.isComplete) {
@@ -86,8 +85,7 @@ export default function LandingPage() {
         }
       } else {
         // New user - go to registration
-        localStorage.setItem('participantPhone', phone.trim());
-        // If the API returned a name from the whitelist, we could store it to pre-fill
+        localStorage.setItem('participantPhone', phoneToUse.trim());
         if (data.whitelistedName) {
             localStorage.setItem('whitelistedName', data.whitelistedName);
         }
@@ -95,9 +93,23 @@ export default function LandingPage() {
       }
     } catch (err) {
       alert('Connection error. Please try again.');
-    } finally {
       setLoading(false);
     }
+  };
+
+  const handleProceed = () => {
+    setThankYouPopup(false);
+    const savedPhone = localStorage.getItem('participantPhone');
+    if (savedPhone) {
+      performLogin(savedPhone);
+    } else {
+      setShowLogin(true);
+    }
+  };
+
+  const handlePhoneLogin = async (e) => {
+    e.preventDefault();
+    performLogin(phone);
   };
 
   if (isCheckingSession) {

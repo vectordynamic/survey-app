@@ -271,7 +271,7 @@ export default function QuestionsManagement() {
 
                     <h4 style={{ margin: '0 0 0.75rem', fontSize: '0.813rem', fontWeight: 600 }}>LOADED DATASETS</h4>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-                        {stats.datasets?.length > 0 ? stats.datasets.map((ds, i) => (
+                        {stats.datasets?.length > 0 ? [...stats.datasets].sort((a, b) => (a._id || '').localeCompare(b._id || '', undefined, { numeric: true, sensitivity: 'base' })).map((ds, i) => (
                             <div key={i} className="dataset-group" style={{ 
                                 border: '1px solid var(--color-border)', 
                                 borderRadius: '12px',
@@ -292,7 +292,7 @@ export default function QuestionsManagement() {
                                 >
                                     <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
                                         <span style={{ transform: expandedDataset === ds._id ? 'rotate(90deg)' : 'none', transition: 'transform 0.2s' }}>▶</span>
-                                        <div style={{ fontSize: '0.938rem', fontWeight: 600 }}>{ds._id || 'Unnamed Dataset'}</div>
+                                        <div style={{ fontSize: '0.938rem', fontWeight: 600 }}>{i + 1}. {ds._id || 'Unnamed Dataset'}</div>
                                     </div>
                                     <div style={{ fontSize: '0.75rem', padding: '0.25rem 0.625rem', background: '#E0F2FE', color: '#0369A1', borderRadius: '20px', fontWeight: 600 }}>
                                         {ds.count} items
